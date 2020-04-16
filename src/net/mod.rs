@@ -46,7 +46,7 @@ use macros::error;
 
 use serde::{Deserialize, Serialize};
 
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{split, AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf};
 
 use tracing::{debug, debug_span, info, trace};
 use tracing_futures::Instrument;
@@ -358,6 +358,14 @@ impl Connection {
     /// Get the local address of this `Connection`
     pub fn local_addr(&self) -> Result<SocketAddr, IoError> {
         self.socket.local_addr()
+    }
+
+    /// Split this `Connection` into a `ReadHalf` and a `WriteHalf` to allow
+    /// simultaneous reading and writing from the same `Connection`
+    pub fn split(
+        self,
+    ) -> (ReadHalf<Box<dyn Socket>>, WriteHalf<Box<dyn Socket>>) {
+        split(self.socket)
     }
 }
 
